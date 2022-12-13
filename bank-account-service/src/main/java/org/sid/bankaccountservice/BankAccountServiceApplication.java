@@ -1,9 +1,20 @@
 package org.sid.bankaccountservice;
 
+import org.sid.bankaccountservice.entities.BankAccount;
+import org.sid.bankaccountservice.entities.Customer;
+import org.sid.bankaccountservice.enums.AccountType;
+import org.sid.bankaccountservice.repositories.BankAccountRepository;
+import org.sid.bankaccountservice.repositories.CustomerRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.mongo.ReactiveStreamsMongoClientDependsOnBeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Date;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @SpringBootApplication
 public class BankAccountServiceApplication {
@@ -12,8 +23,30 @@ public class BankAccountServiceApplication {
         SpringApplication.run(BankAccountServiceApplication.class, args);
     }
     @Bean
-    CommandLineRunner start() {
+    CommandLineRunner start(BankAccountRepository bankAccountRepository, CustomerRepository customerRepository) {
+        return args -> {
+            Stream.of("Mohamed","Yassine","Doha", "Imane").forEach(c->{
 
+               Customer customer= Customer.builder()
+                        .name(c)
+                        .build();
+                customerRepository.save(customer);
+            });
+            customerRepository.findAll().forEach(customer -> {
+                for (int i = 1; i < 10; i++) {
+                    BankAccount bankAccount = BankAccount.builder()
+                            .id(UUID.randomUUID().toString())
+                            .type(Math.random() > 0.5 ? AccountType.CURRENT_ACCOUNT : AccountType.SAVING_ACCOUNT)
+                            .createdAt( new Date())
+                            .balance(1000 + Math.random() * 90000)
+                            .currency("MAD")
+                            .customer(customer)
+                            .build();
+                    bankAccountRepository.save(bankAccount);
+                }
+            });
+
+
+        };
     }
-
 }
